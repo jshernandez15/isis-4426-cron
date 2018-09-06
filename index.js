@@ -22,7 +22,7 @@ cron.schedule("*/30 * * * * *", function() {
     pool.getConnection(function(err, connection) {
         if (err) throw err;
 
-        connection.query("SELECT id_video, path_real, email FROM proyecto0.videos WHERE state_video = 'process'", function(error, results) {
+        connection.query("SELECT id_video, path_real, email FROM proyecto0.videos WHERE state_video = 'En proceso'", function(error, results) {
             if (error) throw error;
 
             connection.release();
@@ -65,7 +65,7 @@ function converterVideo(pathReal) {
     });
     pool.getConnection(function(err, connection) {
         if (err) throw err;
-        connection.query("UPDATE proyecto0.videos SET state_video = ?, path_convertido = ?", ['complete', directoryPath + 'videos_converted/' + extName + '.mp4'], function(error, results) {
+        connection.query("UPDATE proyecto0.videos SET state_video = ?, path_convertido = ?", ['Convertido', directoryPath + 'videos_converted/' + extName + '.mp4'], function(error, results) {
             if (error) throw error;
 
             connection.release();
