@@ -38,7 +38,7 @@ cron.schedule("*/30 * * * * *", function() {
                     converterVideo(pathReal, video.id_video).then(() => {
                         pool.getConnection(function(err, connection) {
                             if (err) throw err;
-                            connection.query("UPDATE proyecto0.videos SET state_video = ?, path_convertido = ?", ['Convertido', '' + video.id_video + '.mp4'], function(error, results) {
+                            connection.query("UPDATE proyecto0.videos SET state_video = ?, path_convertido = ? where id=?", ['Convertido', '' + video.id_video + '.mp4', video.id_video], function(error, results) {
                                 if (error) throw error;
                     
                                 connection.release();
