@@ -14,6 +14,7 @@ var pool = mysql.createPool({
     port: process.env.DB_PORT || 3306,
     database: process.env.DB_SCHEMA || 'proyecto0'
 });
+var path_nas = "/Users/hernanjua/4426/nas/videos/";
 var resultQuery = [];
 app = express();
 
@@ -34,11 +35,22 @@ cron.schedule("*/30 * * * * *", function() {
 
                     var pathReal = video.path_real;
 
-                    converterVideo(pathReal).then(() => {
-                        console.log(`Completed Video Id - ${video.id_video}`);
+                    converterVideo(pathReal, video.id_video).then(() => {
+                        pool.getConnection(function(err, connection) {
+                            if (err) throw err;
+                            connection.query("UPDATE proyecto0.videos SET state_video = ?, path_convertido = ?", ['Convertido', '' + video.id_video + '.mp4'], function(error, results) {
+                                if (error) throw error;
+                    
+                                connection.release();
+                    
+                                if (error) throw error;
+
+                                console.log(`Completed Video Id - ${video.id_video}`);
+                            });
+                        });
                     });
 
-                    sendEmail(video.email);
+                    //sendEmail(video.email);
 
                 });
             } else {
@@ -50,12 +62,12 @@ cron.schedule("*/30 * * * * *", function() {
 
 });
 
-function converterVideo(pathReal) {
+function converterVideo(pathReal, id) {
     var fileName = pathReal.split('\\').pop().split('/').pop();
     var directoryPath = pathReal.slice(0, -(fileName.length));
     var extName = fileName.split('.').slice(0, -1).join('.');
     const p = new Promise((resolve, reject) => {
-        const ffmpeg = spawn('ffmpeg', ['-i', `${pathReal}`, '-codec:a', 'libfdk_aac', '-codec:v', 'libx264', '-profile:v', 'main', `${directoryPath}videos_converted/${extName}.mp4`]);
+        const ffmpeg = spawn('ffmpeg', ['-i', `${pathReal}`, '-codec:a', 'libfdk_aac', '-codec:v', 'libx264', '-profile:v', 'main', `${path_nas}videos_converted/${id}.mp4`]);
         ffmpeg.stderr.on('data', (data) => {
             console.log(`${data}`);
         });
@@ -63,17 +75,6 @@ function converterVideo(pathReal) {
             resolve();
         });
     });
-    pool.getConnection(function(err, connection) {
-        if (err) throw err;
-        connection.query("UPDATE proyecto0.videos SET state_video = ?, path_convertido = ?", ['Convertido', directoryPath + 'videos_converted/' + extName + '.mp4'], function(error, results) {
-            if (error) throw error;
-
-            connection.release();
-
-            if (error) throw error;
-        });
-    });
-
     return p;
 }
 
