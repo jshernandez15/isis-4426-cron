@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require('path');
 const spawn = require('child_process').spawn;
 const parent = process.argv[2];
+var nodemailer = require('nodemailer');
 
 var mysql = require('mysql');
 var pool = mysql.createPool({
@@ -17,6 +18,22 @@ var pool = mysql.createPool({
 var path_nas = "/Users/hernanjua/4426/nas/videos/";
 var resultQuery = [];
 app = express();
+
+var transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: '',
+      pass: ''
+    },
+    proxy: ''
+  });
+  
+  var mailOptions = {
+    from: 'jnhernandz@gmail.com',
+    to: 'myfriend@yahoo.com',
+    subject: 'Tu video fue procesado',
+    text: 'Puedes verlo en línea!'
+  };
 
 function move(oldPath, newPath, callback) {
 
@@ -85,7 +102,13 @@ cron.schedule("*/30 * * * * *", function() {
                         })
                     });
 
-                    //sendEmail(video.email);
+                    transporter.sendMail({...mailOptions, to: video.email}, function(error, info){
+                        if (error) {
+                          console.log(error);
+                        } else {
+                          console.log('Email sent: ' + info.response);
+                        }
+                      });
 
                 });
             } else {
@@ -109,39 +132,6 @@ function converterVideo(pathReal, id) {
         ffmpeg.on('close', (code) => {
             resolve();
         });
-    });
-    return p;
-}
-
-function sendNotification(email) {
-
-    var transporter = nodemailer.createTransport({
-        host: "smtp-mail.outlook.com",
-        secureConnection: false,
-        port: 587,
-        tls: {
-            ciphers: 'SSLv3'
-        },
-        auth: {
-            user: 'oh.urrego@uniandes.edu.co',
-            pass: '*****'
-        }
-    });
-
-    var mailOptions = {
-        from: '"Our Code World " <info@uniandes.edu.co>',
-        to: email,
-        subject: 'Hello ',
-        text: 'Hello world ',
-        html: '<b>Hello world </b><br> This is the first email sent with Nodemailer in Node.js'
-    };
-
-    transporter.sendMail(mailOptions, function(error, info) {
-        if (error) {
-            return console.log(error);
-        }
-
-        console.log('Message sent: ' + info.response);
     });
     return p;
 }
