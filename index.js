@@ -18,6 +18,35 @@ var path_nas = "/Users/hernanjua/4426/nas/videos/";
 var resultQuery = [];
 app = express();
 
+function move(oldPath, newPath, callback) {
+
+    fs.rename(oldPath, newPath, function (err) {
+        if (err) {
+            if (err.code === 'EXDEV') {
+                copy();
+            } else {
+                callback(err);
+            }
+            return;
+        }
+        callback();
+    });
+
+    function copy() {
+        var readStream = fs.createReadStream(oldPath);
+        var writeStream = fs.createWriteStream(newPath);
+
+        readStream.on('error', callback);
+        writeStream.on('error', callback);
+
+        readStream.on('close', function () {
+            fs.unlink(oldPath, callback);
+        });
+
+        readStream.pipe(writeStream);
+    }
+}
+
 cron.schedule("*/30 * * * * *", function() {
 
     pool.getConnection(function(err, connection) {
@@ -36,18 +65,24 @@ cron.schedule("*/30 * * * * *", function() {
                     var pathReal = video.path_real;
 
                     converterVideo(pathReal, video.id_video).then(() => {
-                        pool.getConnection(function(err, connection) {
-                            if (err) throw err;
-                            connection.query("UPDATE proyecto0.videos SET state_video = ?, path_convertido = ? where id_video = ?", ['Generado', '' + video.id_video + '.mp4', video.id_video], function(error, results) {
-                                if (error) throw error;
-                    
-                                connection.release();
-                    
-                                if (error) throw error;
+                        var nueva_ruta = video.path_real.substr(video.path_real.lastIndexOf("/")+1);
 
-                                console.log(`Completed Video Id - ${video.id_video}`);
+                        move(video.path_real, path_nas + nueva_ruta, function(moveErr) {
+                            if (moveErr) throw moveErr;
+
+                            pool.getConnection(function(err, connection) {
+                                if (err) throw err;
+                                connection.query("UPDATE proyecto0.videos SET state_video = ?, path_convertido = ?, path_real=? where id_video = ?", ['Generado', '' + video.id_video + '.mp4', nueva_ruta, video.id_video], function(error, results) {
+                                    if (error) throw error;
+                        
+                                    connection.release();
+                        
+                                    if (error) throw error;
+    
+                                    console.log(`Completed Video Id - ${video.id_video}`);
+                                });
                             });
-                        });
+                        })
                     });
 
                     //sendEmail(video.email);
@@ -65,11 +100,11 @@ cron.schedule("*/30 * * * * *", function() {
 function converterVideo(pathReal, id) {
     var fileName = pathReal.split('\\').pop().split('/').pop();
     var directoryPath = pathReal.slice(0, -(fileName.length));
-    var extName = fileName.split('.').slice(0, -1).join('.');
+    var extName = '';
     const p = new Promise((resolve, reject) => {
         const ffmpeg = spawn('ffmpeg', ['-i', `${pathReal}`, '-codec:a', 'libfdk_aac', '-codec:v', 'libx264', '-profile:v', 'main', `${path_nas}videos_converted/${id}.mp4`]);
         ffmpeg.stderr.on('data', (data) => {
-            console.log(`${data}`);
+            //console.log(`${data}`);
         });
         ffmpeg.on('close', (code) => {
             resolve();
