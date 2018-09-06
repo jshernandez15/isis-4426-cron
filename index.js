@@ -67,7 +67,7 @@ cron.schedule("*/30 * * * * *", function() {
                     converterVideo(pathReal, video.id_video).then(() => {
                         var nueva_ruta = video.path_real.substr(video.path_real.lastIndexOf("/")+1);
 
-                        move(video.path_real, path_nas + nueva_ruta, function(moveErr) {
+                        move(video.path_real, path_nas + "original/"+ nueva_ruta, function(moveErr) {
                             if (moveErr) throw moveErr;
 
                             pool.getConnection(function(err, connection) {
@@ -104,7 +104,7 @@ function converterVideo(pathReal, id) {
     const p = new Promise((resolve, reject) => {
         const ffmpeg = spawn('ffmpeg', ['-i', `${pathReal}`, '-codec:a', 'libfdk_aac', '-codec:v', 'libx264', '-profile:v', 'main', `${path_nas}videos_converted/${id}.mp4`]);
         ffmpeg.stderr.on('data', (data) => {
-            //console.log(`${data}`);
+            console.log(`${data}`);
         });
         ffmpeg.on('close', (code) => {
             resolve();
