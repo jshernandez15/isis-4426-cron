@@ -3,6 +3,7 @@ const express = require("express");
 const fs = require("fs");
 const path = require('path');
 const spawn = require('child_process').spawn;
+const os = require('os');
 const parent = process.argv[2];
 var nodemailer = require('nodemailer');
 var sesTransport = require('nodemailer-ses-transport');
@@ -67,59 +68,62 @@ cron.schedule("*/30 * * * * *", function() {
     pool.getConnection(function(err, connection) {
         if (err) throw err;
 
-        connection.query("SELECT id_video, path_real, email FROM proyecto0.videos WHERE state_video = 'En proceso' limit 1", function(error, results) {
-            if (error) throw error;
+        connection.query("update proyecto0.videos set host = ? where state_video = 'En proceso' and host is null limit 1", [os.hostname()], function(error, results) {
 
-            connection.release();
-
-            if (error) throw error;
-
-            if (results && results.length > 0) {
-                results.forEach(function(video) {
-
-                    var pathReal = video.path_real;
-
-                    converterVideo(pathReal, video.id_video).then(() => {
-                        var nueva_ruta = video.path_real.substr(video.path_real.lastIndexOf("/") + 1);
-
-                        move(video.path_real, path_nas + "original/" + nueva_ruta, function(moveErr) {
-                            if (moveErr) throw moveErr;
-
-                            pool.getConnection(function(err, connection) {
-                                if (err) throw err;
-                                connection.query("UPDATE proyecto0.videos SET state_video = ?, path_convertido = ?, path_real=? where id_video = ?", ['Generado', '' + video.id_video + '.mp4', nueva_ruta, video.id_video], function(error, results) {
-                                    if (error) throw error;
-
-                                    connection.release();
-
-                                    if (error) throw error;
-
-                                    console.log(`Completed Video Id - ${video.id_video}`);
+            connection.query("SELECT id_video, path_real, email FROM proyecto0.videos WHERE state_video = 'En proceso' and host = ? limit 1", [os.hostname()], function(error, results) {
+                if (error) throw error;
+    
+                connection.release();
+    
+                if (error) throw error;
+    
+                if (results && results.length > 0) {
+                    results.forEach(function(video) {
+    
+                        var pathReal = video.path_real;
+    
+                        converterVideo(pathReal, video.id_video).then(() => {
+                            var nueva_ruta = video.path_real.substr(video.path_real.lastIndexOf("/") + 1);
+    
+                            move(video.path_real, path_nas + "original/" + nueva_ruta, function(moveErr) {
+                                if (moveErr) throw moveErr;
+    
+                                pool.getConnection(function(err, connection) {
+                                    if (err) throw err;
+                                    connection.query("UPDATE proyecto0.videos SET state_video = ?, path_convertido = ?, path_real=? where id_video = ?", ['Generado', '' + video.id_video + '.mp4', nueva_ruta, video.id_video], function(error, results) {
+                                        if (error) throw error;
+    
+                                        connection.release();
+    
+                                        if (error) throw error;
+    
+                                        console.log(`Completed Video Id - ${video.id_video}`);
+                                    });
                                 });
-                            });
-                        })
+                            })
+                        });
+    
+                        var mailOptions = {
+                            from: 'oh.urrego@uniandes.edu.co',
+                            to: video.email,
+                            subject: 'Tu video ya fue cargado EXITOSAMENTE!!',
+                            text: 'Hola, te queremos decir que tu video ya fue procesado y cargado exitosamente'
+                        };
+    
+                        transporter.sendMail(mailOptions, function(error, info) {
+                            if (error) {
+                                console.log(error);
+                            } else {
+                                console.log('Message sent: ' + info);
+                            }
+                        });
+    
                     });
-
-                    var mailOptions = {
-                        from: 'oh.urrego@uniandes.edu.co',
-                        to: video.email,
-                        subject: 'Tu video ya fue cargado EXITOSAMENTE!!',
-                        text: 'Hola, te queremos decir que tu video ya fue procesado y cargado exitosamente'
-                    };
-
-                    transporter.sendMail(mailOptions, function(error, info) {
-                        if (error) {
-                            console.log(error);
-                        } else {
-                            console.log('Message sent: ' + info);
-                        }
-                    });
-
-                });
-            } else {
-                console.log('There are No videos to convert.')
-            }
-
+                } else {
+                    console.log('There are No videos to convert.')
+                }
+    
+            });
         });
     });
 
