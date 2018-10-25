@@ -15,6 +15,7 @@ exports.fileToConverted = function(fileName, fileId) {
         accessKeyId: SESCREDENTIALS.accessKeyId,
         secretAccessKey: SESCREDENTIALS.secretAccessKey,
     });
+
     AWS.config.region = "us-west-2"; //us-west-2 is Oregon
     var response = {};
 
