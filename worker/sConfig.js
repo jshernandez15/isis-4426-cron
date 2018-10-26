@@ -2,7 +2,7 @@ var AWS = require("aws-sdk");
 var fs = require('fs');
 const spawn = require('child_process').spawn;
 
-var path_nas = '/Users/urregoo/Downloads/';
+var path_nas = '/tmp/videos';
 
 var SESCREDENTIALS = {
     accessKeyId: process.env.KEYID || '',
@@ -20,7 +20,7 @@ exports.fileToConverted = function(fileName, fileId) {
     var response = {};
 
     var params = { Bucket: '4426-grupo1-videos/original', Key: fileName };
-    var file = require('fs').createWriteStream('/Users/urregoo/Downloads/' + fileName).once('finish', function() {
+    var file = require('fs').createWriteStream(path_nas + fileName).once('finish', function() {
         converterVideo(file.path, fileId).then(() => {
 
             console.log(path_nas + fileId + ".mp4");
@@ -45,7 +45,7 @@ exports.fileToConverted = function(fileName, fileId) {
 
 function converterVideo(pathReal, id) {
     const p = new Promise((resolve, reject) => {
-        const ffmpeg = spawn('ffmpeg', ['-i', `${pathReal}`, '-codec:a', 'libfdk_aac', '-codec:v', 'libx264', '-profile:v', 'main', `${path_nas}${id}.mp4`]);
+        const ffmpeg = spawn('/home/ec2-user/bin/ffmpeg', ['-i', `${pathReal}`, '-codec:a', 'libfdk_aac', '-codec:v', 'libx264', '-profile:v', 'main', `${path_nas}${id}.mp4`]);
         ffmpeg.stderr.on('data', (data) => {
             console.log(`${data}`);
         });
