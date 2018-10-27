@@ -2,6 +2,8 @@ var AWS = require("aws-sdk");
 var fs = require('fs');
 const spawn = require('child_process').spawn;
 var Updatedb = require("./updatedb");
+var nodemailer = require('nodemailer');
+var sesTransport = require('nodemailer-ses-transport');
 
 var path_nas = '/tmp/videos/';
 
@@ -9,6 +11,13 @@ var SESCREDENTIALS = {
     accessKeyId: process.env.KEYID || '',
     secretAccessKey: process.env.SECRETKEYID || ''
 };
+
+var transporter = nodemailer.createTransport(sesTransport({
+    accessKeyId: SESCREDENTIALS.accessKeyId,
+    secretAccessKey: SESCREDENTIALS.secretAccessKey,
+    region: 'us-west-2',
+    rateLimit: 5
+}));
 
 exports.fileToConverted = function(fileName, fileId) {
 
@@ -34,7 +43,24 @@ exports.fileToConverted = function(fileName, fileId) {
                     }
                     console.log('success');
 
-                    Updatedb.update(fileId, fileId + ".mp4", callback)
+                    Updatedb.update(fileId, fileId + ".mp4", function() {
+
+                        var mailOptions = {
+                            from: 'oh.urrego@uniandes.edu.co',
+                            to: responseJson.email,
+                            subject: 'Tu video ya fue cargado EXITOSAMENTE!!',
+                            text: 'Hola, te queremos decir que tu video ya fue procesado y cargado exitosamente'
+                        };
+
+                        transporter.sendMail(mailOptions, function(error, info) {
+                            if (error) {
+                                console.log(error);
+                            } else {
+                                console.log('Message sent: ' + info);
+                            }
+                        });
+
+                    })
 
                 });
             });
