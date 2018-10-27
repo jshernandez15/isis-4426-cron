@@ -70,7 +70,6 @@ exports.fileToConverted = function(fileName, fileId) {
     s3bucket.getObject(params).createReadStream().pipe(file);
     console.log(file.path)
 
-
 };
 
 function converterVideo(pathReal, id) {
