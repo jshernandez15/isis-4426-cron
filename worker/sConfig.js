@@ -1,8 +1,9 @@
 var AWS = require("aws-sdk");
 var fs = require('fs');
 const spawn = require('child_process').spawn;
+var Updatedb = require("./updatedb");
 
-var path_nas = '/tmp/videos';
+var path_nas = '/tmp/videos/';
 
 var SESCREDENTIALS = {
     accessKeyId: process.env.KEYID || '',
@@ -32,6 +33,9 @@ exports.fileToConverted = function(fileName, fileId) {
                         console.log('error in callback');
                     }
                     console.log('success');
+
+                    Updatedb.update(fileId, fileId + ".mp4", callback)
+
                 });
             });
 

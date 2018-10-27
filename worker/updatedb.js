@@ -2,7 +2,7 @@
 
 var AWS = require("aws-sdk");
 
-exports.update = function(competition, id, callback) {
+exports.update = function(id, path_convertido, callback) {
 
     AWS.config.update({
         accessKeyId: process.env.KEYID,
@@ -14,10 +14,17 @@ exports.update = function(competition, id, callback) {
 
     var params = {
         TableName: 'videos',
-        Item: {
-            "path_convertido": { "S": video.pathConvertido },
-            "state_video": { "S": video.stateVideo }
-        }
+        Key: {
+            id: id
+        },
+        UpdateExpression: "set path_convertido = :path_convertido, state_video = :state_video",
+        ConditionExpression: "id = :id",
+        ExpressionAttributeValues: {
+            ":path_convertido": path_convertido,
+            ":state_video": "Generado",
+            ":id": id
+        },
+        ReturnValues: "UPDATED_NEW"
     };
 
     ddb.putItem(params, function(err, data) {
