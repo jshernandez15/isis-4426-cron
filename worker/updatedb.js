@@ -25,7 +25,7 @@ exports.update = function(id, path_convertido, callback) {
         ReturnValues: "UPDATED_NEW"
     };
 
-    ddb.putItem(params, function(err, data) {
+    ddb.update(params, function(err, data) {
         if (err) {
             console.log("Error", err);
             callback({ code: 500 });
