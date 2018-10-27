@@ -15,7 +15,7 @@ exports.update = function(id, path_convertido, callback) {
     var params = {
         TableName: 'videos',
         Key: {
-            id: id
+            "id": id
         },
         UpdateExpression: "set path_convertido = :path_convertido, state_video = :state_video",
         ConditionExpression: "id = :id",
