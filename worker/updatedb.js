@@ -18,11 +18,9 @@ exports.update = function(id, path_convertido, callback) {
             "id": id
         },
         UpdateExpression: "set path_convertido = :path_convertido, state_video = :state_video",
-        ConditionExpression: "id = :id",
         ExpressionAttributeValues: {
             ":path_convertido": path_convertido,
-            ":state_video": "Generado",
-            ":id": id
+            ":state_video": "Generado"
         },
         ReturnValues: "UPDATED_NEW"
     };
