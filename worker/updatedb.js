@@ -42,8 +42,11 @@ exports.select = function(fkid, callback) {
 
     var params = {
         TableName: 'competitions',
+
         Key: {
-            "id": fkid
+            "id": {
+                "S": fkid
+            }
         },
         ProjectionExpression: 'address'
     };
