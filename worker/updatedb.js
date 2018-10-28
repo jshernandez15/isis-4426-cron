@@ -2,13 +2,13 @@
 
 var AWS = require("aws-sdk");
 
-exports.update = function(id, path_convertido, callback) {
+AWS.config.update({
+    accessKeyId: process.env.KEYID,
+    secretAccessKey: process.env.SECRETKEYID
+});
+AWS.config.region = "us-west-2"; //us-west-2 is Oregon
 
-    AWS.config.update({
-        accessKeyId: process.env.KEYID,
-        secretAccessKey: process.env.SECRETKEYID
-    });
-    AWS.config.region = "us-west-2"; //us-west-2 is Oregon
+exports.update = function(id, path_convertido, callback) {
 
     var ddb = new AWS.DynamoDB.DocumentClient;
 
@@ -32,6 +32,29 @@ exports.update = function(id, path_convertido, callback) {
         } else {
             console.log("Success", data);
             callback({ code: 200 });
+        }
+    });
+};
+
+exports.select = function(fkid, callback) {
+
+    var ddb = new AWS.DynamoDB();
+
+    var params = {
+        TableName: 'competitions',
+        Key: {
+            "id": fkid
+        },
+        ProjectionExpression: 'address'
+    };
+
+    ddb.getItem(params, function(err, data) {
+        if (err) {
+            console.log("Error", err);
+            callback({ code: 500 });
+        } else {
+            console.log("Success", data.Item);
+            callback(data.Item);
         }
     });
 };

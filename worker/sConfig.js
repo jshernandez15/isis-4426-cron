@@ -45,20 +45,24 @@ exports.fileToConverted = function(fileName, fileId) {
 
                     Updatedb.update(fileId, fileId + ".mp4", function() {
 
-                        var mailOptions = {
-                            from: 'oh.urrego@uniandes.edu.co',
-                            to: responseJson.email,
-                            subject: 'Tu video ya fue cargado EXITOSAMENTE!!',
-                            text: 'Hola, te queremos decir que tu video ya fue procesado y cargado exitosamente'
-                        };
+                        Updatedb.select(responseJson.fk_id_competition, function(item) {
 
-                        transporter.sendMail(mailOptions, function(error, info) {
-                            if (error) {
-                                console.log(error);
-                            } else {
-                                console.log('Message sent: ' + info);
-                            }
-                        });
+                            var mailOptions = {
+                                from: 'oh.urrego@uniandes.edu.co',
+                                to: responseJson.email,
+                                subject: 'Tu video ya fue cargado EXITOSAMENTE!!',
+                                text: 'Hola, te queremos decir que tu video ya fue procesado y cargado exitosamente. Revisalo en: http://d10pkk829h9oy.cloudfront.net/' + item + responseJson.fk_id_competition
+                            };
+
+                            transporter.sendMail(mailOptions, function(error, info) {
+                                if (error) {
+                                    console.log(error);
+                                } else {
+                                    console.log('Message sent: ' + info);
+                                }
+                            });
+
+                        })
 
                     })
 
