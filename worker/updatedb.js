@@ -10,7 +10,7 @@ exports.update = function(id, path_convertido, callback) {
     });
     AWS.config.region = "us-west-2"; //us-west-2 is Oregon
 
-    var ddb = new AWS.DynamoDB();
+    var ddb = new AWS.DynamoDB.DocumentClient;
 
     var params = {
         TableName: 'videos',
