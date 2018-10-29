@@ -78,7 +78,7 @@ exports.fileToConverted = function(fileName, fileId) {
 
 function converterVideo(pathReal, id) {
     const p = new Promise((resolve, reject) => {
-        const ffmpeg = spawn('/home/ec2-user/bin/ffmpeg', ['-i', `${pathReal}`, '-codec:a', 'libfdk_aac', '-codec:v', 'libx264', '-profile:v', 'main', `${path_nas}${id}.mp4`]);
+        const ffmpeg = spawn('/home/ec2-user/bin/ffmpeg', ['-y', '-i', `${pathReal}`, '-codec:a', 'libfdk_aac', '-codec:v', 'libx264', '-profile:v', 'main', `${path_nas}${id}.mp4`]);
         ffmpeg.stderr.on('data', (data) => {
             console.log(`${data}`);
         });
